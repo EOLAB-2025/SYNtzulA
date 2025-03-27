@@ -58,6 +58,10 @@ initial begin
 		$dumpfile("tb_rtl.vcd"); 
 	`endif
 	
+	`ifdef PS   
+		$dumpfile("tb_ps.vcd"); 
+	`endif	
+	
 
 	$dumpvars(0, servant_tb); 
 	
@@ -104,13 +108,12 @@ end
 	wire valid_snn;
 	wire [31:0] N4;
 	
-`ifndef QUAD	
-	assign N4        = servant_sim_i.service_ihp_top.NEURON_4/2;
-`else
-	assign N4        = servant_sim_i.service_ihp_top.NEURON_4/4;
-`endif
 
-`ifndef PROVA_TB	
+	assign N4        = servant_sim_i.service_ihp_top.NEURON_4/2;
+
+
+
+`ifndef PS	
 	assign valid_snn = servant_sim_i.service_ihp_top.service_ihp_chip.service_ihp.output_buffer_wr_en_debug;
 	assign p1        = servant_sim_i.service_ihp_top.service_ihp_chip.service_ihp.p1;
 	assign p2        = servant_sim_i.service_ihp_top.service_ihp_chip.service_ihp.p2;
@@ -151,12 +154,7 @@ end
 	assign p2[1]  = servant_sim_i.service_ihp_top.service_ihp_chip. \service_ihp.mosquito.p2[1]  ;
 	assign p2[0]  = servant_sim_i.service_ihp_top.service_ihp_chip. \service_ihp.mosquito.p2[0]  ;	
 	
-	//assign valid_snn  = servant_sim_i.service_ihp_top.service_ihp_chip._12528_;
-	
-	`ifdef QUAD
-		//assign valid_snn  = servant_sim_i.service_ihp_top.service_ihp_chip._18198_;
-		assign valid_snn  = servant_sim_i.service_ihp_top.service_ihp_chip._18350_;
-	`endif
+	assign valid_snn  = servant_sim_i.service_ihp_top.service_ihp_chip._12532_;
 
 
 `endif
