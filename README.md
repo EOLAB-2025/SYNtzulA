@@ -76,3 +76,26 @@ The final result of the backend flow is shown below.
 <p align="center">
   <img src="images/layout.png"  width="400">
 </p>
+
+#Citation
+
+If you wish to cite this work, please use the following:
+
+```bibtex
+@inproceedings{10.1145/3706594.3726979,
+author = {Martis, Luca and Leone, Gianluca and Raffo, Luigi and Meloni, Paolo},
+title = {SYNtzulA: Open-Source Hardware for Energy-Efficient Spiking Neural Network Inference},
+year = {2025},
+isbn = {9798400713934},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3706594.3726979},
+doi = {10.1145/3706594.3726979},
+pages = {70–73},
+numpages = {4},
+keywords = {Spiking Neural Networks, Edge AI, OpenROAD, ASIC, open-source},
+location = {
+},
+series = {CF '25 Companion}
+}
+
