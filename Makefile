@@ -36,9 +36,12 @@ SIM_RTL := rtl/servant/* rtl/serv/* rtl/memorie_ihp/* rtl/behavioural_ihp/* std_
 PS_RTL  := rtl/behavioural_ihp/* rtl/servant/service_ihp_top.v \
            rtl/servant/servant_clock_gen.v std_cells/*
 
-# OpenROAD synthesis results and local netlist directory
+# OpenROAD results and local netlist directories
 ORFS_RESULTS   := $(OPENROAD_PATH)/flow/results/$(PLATFORM)
+# post-synthesis netlist (1_synth.v) goes here
 PS_NETLIST_DIR := ORFS_netlist/post_synthesis
+# post-layout netlist (6_final.v) goes here
+PL_NETLIST_DIR := ORFS_netlist/final_layout
 
 # INIT_FILE injection: the synthesized netlist instantiates the delta-modulator
 # memory without a preload file; simulation needs it initialized from delta.txt.
@@ -49,7 +52,10 @@ INIT_INJECT = sed -i '/delta_modulator_1\.delta_mem\.single_port/ s|RM_IHPSG13_1
 .PHONY: simulate_dual_core simulate_quad_core \
         simulate_service_ihp_dual_core_PostSintesi \
         simulate_service_ihp_quad_core_PostSintesi \
-        netlist_dual_core netlist_quad_core
+        simulate_service_ihp_dual_core_PostLayout \
+        simulate_service_ihp_quad_core_PostLayout \
+        netlist_dual_core netlist_quad_core \
+        netlist_layout_dual_core netlist_layout_quad_core
 
 # ---- RTL ----
 simulate_dual_core:
@@ -84,4 +90,26 @@ simulate_service_ihp_quad_core_PostSintesi: netlist_quad_core
 	cp ./sim/mem/emg/flash_quad_core.txt ./sim/mem/emg/flash.txt
 	iverilog -D PS -D SIM -D QUAD_CORE -o rtl_sim \
 	    rtl/define.v $(SIM_TB) $(PS_RTL) $(PS_NETLIST_DIR)/QuadCore.v
+	vvp rtl_sim
+
+# ---- Import final (post-layout) netlist from OpenROAD and inject the INIT_FILE ----
+netlist_layout_dual_core:
+	cp $(ORFS_RESULTS)/SYNtzulA_DualCore/1/6_final.v $(PL_NETLIST_DIR)/DualCore.v
+	$(INIT_INJECT) $(PL_NETLIST_DIR)/DualCore.v
+
+netlist_layout_quad_core:
+	cp $(ORFS_RESULTS)/SYNtzulA_QuadCore/1/6_final.v $(PL_NETLIST_DIR)/QuadCore.v
+	$(INIT_INJECT) $(PL_NETLIST_DIR)/QuadCore.v
+
+# ---- Post-layout (imports the final netlist first) ----
+simulate_service_ihp_dual_core_PostLayout: netlist_layout_dual_core
+	cp ./sim/mem/emg/flash_dual_core.txt ./sim/mem/emg/flash.txt
+	iverilog -D PS -D SIM -D DUAL_CORE -o rtl_sim \
+	    rtl/define.v $(SIM_TB) $(PS_RTL) $(PL_NETLIST_DIR)/DualCore.v
+	vvp rtl_sim
+
+simulate_service_ihp_quad_core_PostLayout: netlist_layout_quad_core
+	cp ./sim/mem/emg/flash_quad_core.txt ./sim/mem/emg/flash.txt
+	iverilog -D PS -D SIM -D QUAD_CORE -o rtl_sim \
+	    rtl/define.v $(SIM_TB) $(PS_RTL) $(PL_NETLIST_DIR)/QuadCore.v
 	vvp rtl_sim
