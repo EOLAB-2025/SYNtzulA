@@ -19,14 +19,10 @@ Different tools are used for the front-end (simulation) and the back-end (synthe
 
 - **RISC-V cross-compiler** (`riscv32-unknown-elf-`) — required to build the firmware. If your system does not already include it, refer to the [riscv-gnu-toolchain page](https://github.com/riscv-collab/riscv-gnu-toolchain).
 - **Simulation** — tested with the **oss-cad-suite (2023-07-28)**, which provides the `iverilog`/`vvp` tools. It can be downloaded [here](https://github.com/YosysHQ/oss-cad-suite-build/releases/tag/2023-07-28).
-- **Synthesis** — performed with **Yosys 0.52+50** (git sha1 `c894685f2`), as bundled in the **oss-cad-suite (2025-04-16)**. Activate it with:
-  ```bash
-  source oss-cad-suite-linux-x64-20250416/oss-cad-suite/environment
-  ```
-- **Floorplanning, placement, and routing** — performed with **OpenROAD 2.0-17598-ga008522d8** (Ubuntu 20.04), installed with:
-  ```bash
-  sudo dpkg -i openroad_2.0-17598-ga008522d8_amd64-ubuntu-20.04.deb
-  ```
+- **Synthesis** — performed with **Yosys 0.52+50** (git sha1 `c894685f2`), as bundled in the **oss-cad-suite (2025-04-16)**
+
+- **Floorplanning, placement, and routing** — performed with **OpenROAD 2.0-17598-ga008522d8** (Ubuntu 20.04).
+
 - **Back-end flow** — driven by **OpenROAD Flow Scripts**, tag **`v3.0-2835-geec75094`** (HEAD `eec75094`, 15 April 2025).
 
 > ⚠️ **Note — local modifications to OpenROAD Flow Scripts**
@@ -71,7 +67,7 @@ If the simulation completes successfully, the inference results are printed on t
 
 ## Gate-level simulation
 
-The same testbench can be run against the synthesized netlist (**post-synthesis**) or the final routed netlist (**post-layout**). These targets automatically copy the netlist out of the OpenROAD results, preload the delta-modulator memory, and then simulate — so they require the back-end flow (below) to have been run first for the corresponding variant.
+The same testbench can be run against the synthesized netlist (**post-synthesis**) or the final routed netlist (**post-layout**). These targets automatically copy the netlist out of the OpenROAD results, preload the delta-modulator memory (to be fixed), and then simulate — so they require the back-end flow (below) to have been run first for the corresponding variant.
 
 **Post-synthesis** (uses `1_synth.v`):
 
@@ -116,30 +112,26 @@ The final layout can be inspected in the GUI with:
 make DESIGN_CONFIG=./designs/ihp-sg13g2/SYNtzulA/config_dual_core.mk gui_final
 ```
 
-The final results of the back-end flow for both variants are shown below ([PDF](images/DualQuad_lyt.pdf)):
+The final layouts of the two variants are shown below.
 
-<p align="center">
-  <img src="images/DualQuad_lyt.png" width="400">
-</p>
+| Dual-core | Quad-core |
+|:---:|:---:|
+| <img src="images/dual_core.png" width="300"> | <img src="images/quad_core.png" width="300"> |
 
 ## Citation
 
 If you wish to cite this work, please use the following:
 
 ```bibtex
-@inproceedings{10.1145/3706594.3726979,
-author = {Martis, Luca and Leone, Gianluca and Raffo, Luigi and Meloni, Paolo},
-title = {SYNtzulA: Open-Source Hardware for Energy-Efficient Spiking Neural Network Inference},
-year = {2025},
-isbn = {9798400713934},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3706594.3726979},
-doi = {10.1145/3706594.3726979},
-pages = {70–73},
-numpages = {4},
-keywords = {Spiking Neural Networks, Edge AI, OpenROAD, ASIC, open-source},
-location = {},
-series = {CF '25 Companion}
+@ARTICLE{11303250,
+  author={Martis, Luca and Leone, Gianluca and Raffo, Luigi and Meloni, Paolo},
+  journal={IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems}, 
+  title={SYNtzulA: Open Hardware for Near-Sensor SNN Inference}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1-1},
+  keywords={Neuromorphics;Energy efficiency;Field programmable gate arrays;Hardware;Throughput;Computer architecture;Power demand;Program processors;Energy consumption;Spiking neural networks;Spiking Neural Networks;Open Hardware;ASIC;Low Power},
+  doi={10.1109/TCAD.2025.3645186}}
 }
 ```
