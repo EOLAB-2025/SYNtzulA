@@ -5,7 +5,9 @@ module servant_sim
    output wire [31:0] pc_adr,
    output wire	      pc_vld,
    output wire	      q,
-   input wire [2:0] buttons);
+   input wire [2:0] buttons,
+   input wire i_rxd 
+   );
 
    parameter memfile = "firmware/exe.hex";
    parameter memsize = 8192;
@@ -40,7 +42,8 @@ module servant_sim
 				.o_flash_sck(SPI_CLK),
 				.o_flash_mosi(SPI_MOSI),
 				.i_flash_miso(SPI_MISO),
-				.o_txd(q)
+				.o_txd(q),
+				.i_rxd(i_rxd)
 			); 	
 
    // change con service interface

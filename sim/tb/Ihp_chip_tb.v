@@ -31,14 +31,23 @@ module servant_tb;
   integer code;
   integer byte_n=0;
 
+//    ______ _____ _____  __  ____          __     _____  ______   _    _ _____  _      ____          _____  
+//   |  ____|_   _|  __ \|  \/  \ \        / /\   |  __ \|  ____| | |  | |  __ \| |    / __ \   /\   |  __ \ 
+//   | |__    | | | |__) | \  / |\ \  /\  / /  \  | |__) | |__    | |  | | |__) | |   | |  | | /  \  | |  | |
+//   |  __|   | | |  _  /| |\/| | \ \/  \/ / /\ \ |  _  /|  __|   | |  | |  ___/| |   | |  | |/ /\ \ | |  | |
+//   | |     _| |_| | \ \| |  | |  \  /\  / ____ \| | \ \| |____  | |__| | |    | |___| |__| / ____ \| |__| |
+//   |_|    |_____|_|  \_\_|  |_|   \/  \/_/    \_\_|  \_\______|  \____/|_|    |______\____/_/    \_\_____/ 
+//                                                                                                           
+//                                                                                                           
 	initial begin
 		i_Rx_Serial = 1; // UART idle high
 		
-		@(posedge ready_next); // aspetta che ready_next vada alto
+		//invio dimensione del codice 
+		@(posedge ready_next); 
 		send_uart_byte(1);
 
-		@(posedge ready_next); // aspetta che ready_next vada alto
-		send_uart_byte(146);		
+		@(posedge ready_next); 
+		send_uart_byte(111);		
 
 		// Apri il file
 		fd = $fopen("firmware/exe_ROM.txt", "r");
@@ -126,18 +135,25 @@ integer f_out_snn_L3, f_t_L3;
 
 initial begin
  
-	`ifdef dual_core_v2 
+	`ifdef DUAL_CORE 
 		`ifdef PS
-			$dumpfile("tb_dual_core_v2_PS.vcd");
+			$dumpfile("tb_dual_core_PS.vcd");
 		`elsif FINAL
-			$dumpfile("tb_dual_core_v2_final.vcd");
+			$dumpfile("tb_dual_core_final.vcd");
 		`else
-			$dumpfile("tb_dual_core_v2_rtl.vcd");	
+			$dumpfile("tb_dual_core_rtl.vcd");	
 		`endif 		
-	`else
-		$dumpfile("tb_serv.vcd"); 
 	`endif 
-	
+
+	`ifdef QUAD_CORE 
+		`ifdef PS
+			$dumpfile("tb_quad_core_PS.vcd");
+		`elsif FINAL
+			$dumpfile("tb_quad_core_final.vcd");
+		`else
+			$dumpfile("tb_quad_core_rtl.vcd");	
+		`endif 		
+	`endif 	
 
 	$dumpvars(0, servant_tb); 
 	
@@ -154,7 +170,7 @@ initial begin
 	#700000000; 
 
 	//$fclose(f_out_spikes);
-    $fclose(f_out);
+        $fclose(f_out);
 	$fclose(f_out_target);
 	$fclose(f_out_bin);	
 	$fclose(f_t_bin);	
@@ -185,7 +201,7 @@ end
 	wire valid_snn;
 	wire [31:0] N4;
 	
-`ifndef QUAD	
+`ifndef QUAD_CORE	
 	assign N4        = servant_sim_i.service_ihp_top.NEURON_4/2;
 `else
 	assign N4        = servant_sim_i.service_ihp_top.NEURON_4/4;
@@ -193,7 +209,7 @@ end
 
 	assign valid_snn = servant_sim_i.service_ihp_top.service_ihp_chip.output_buffer_wr_en_debug;
 
-`ifndef PROVA_TB	
+`ifndef PS	
 	assign p1        = servant_sim_i.service_ihp_top.service_ihp_chip.service_ihp.p1;
 	assign p2        = servant_sim_i.service_ihp_top.service_ihp_chip.service_ihp.p2;
 `else
