@@ -1,0 +1,3 @@
+INIT MEMORIES 
+
+RM_IHPSG13_1P_256x48_c2_bm_bist #(.INIT_FILE("sim/mem/emg/delta.txt")) \service_ihp.mosquito.encoding_slot_i.encoding_slot_emg_i.delta_modulator_1.delta_mem.single_port
