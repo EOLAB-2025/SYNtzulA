@@ -56,7 +56,7 @@ module accelerator_if #(
 
 	// uart
 	input wire		   i_uart_ready,
-	output reg  [ 7:0] o_uart_data,
+	output reg           [ 7:0] o_uart_data,
 	output reg		   o_uart_send, 
 	output reg		   o_uart_wren,
 	output reg 		   o_uart_hp,
@@ -83,7 +83,20 @@ module accelerator_if #(
 	output wire gate_general, 
 	input wire timer_irq,
 	
-	output enable_next_debug
+	output enable_next_debug,
+	
+	//RX UART	
+	output wire consumed, 
+	input  wire RX_FULL,
+	input  wire [7:0] RX_BYTE,
+	
+	//BOOT
+	output reg finish_boot,
+	output reg [63:0] boot_ram_data,
+	output reg [12:0] boot_ram_addr,
+	output wire boot_ram_wren,
+	output wire rst_processor
+	
 	);
 	
 	assign enable_next_debug = enable_next ;
@@ -101,6 +114,7 @@ module accelerator_if #(
 
 	reg gate_serv_armed;
 	reg gate_general_int;
+
 /*
 	initial gate_spi = 0;
 	initial gate_snn = 0;
@@ -147,9 +161,9 @@ module accelerator_if #(
 				//gate_serv <= 0;
 				//gate_serv_armed  <= 0;  //forse da reinserire da qualche altra parte 
 				//gate_general_int <= 0;
-				snn_valid_rst    <= 0;
+				//snn_valid_rst    <= 0;
 				o_uart_hp        <= 0;
-				o_uart_data      <= 0;
+				//o_uart_data      <= 0;
 			end
    end
    
@@ -168,6 +182,7 @@ module accelerator_if #(
 	assign o_snn_adr_w2 = snn_adr;
 	assign o_snn_adr_w3 = snn_adr;
 	assign o_snn_adr_w4 = snn_adr;
+	
 	reg snn_valid, snn_valid_rst;
 	
 	
@@ -196,28 +211,38 @@ module accelerator_if #(
 	`ifdef ACCESSIBILITY
 		`ifdef SIM initial $display("ACCESSIBILITY IS DEFINED"); `endif
 
-		assign o_spike_mem_adr = i_wb_adr[8:2];
+		assign o_spike_mem_adr       =  i_wb_adr[8:2];
 	 	assign o_spike_mem_rd_en[0]  = (i_wb_adr[27:20] == 8'h03) && (i_wb_cyc); // spike mem 1
 		assign o_spike_mem_rd_en[1]  = (i_wb_adr[27:20] == 8'h04) && (i_wb_cyc); // spike mem 2
 		assign o_spike_mem_wr_en[0]  = (i_wb_adr[27:20] == 8'h03) && (i_wb_cyc && i_wb_we); // spike mem 1
 		assign o_spike_mem_wr_en[1]  = (i_wb_adr[27:20] == 8'h04) && (i_wb_cyc && i_wb_we); // spike mem 2
-		assign o_spike_mem_dat       = i_wb_dat[3:0];
+		assign o_spike_mem_dat       =  i_wb_dat[3:0];
 
-		assign o_sample_mem_adr =     i_wb_adr[8:2];
+		assign o_sample_mem_adr    =  i_wb_adr[8:2];
 		assign o_sample_mem_rd_en  = (i_wb_adr[27:20] == 8'h05) && (i_wb_cyc); // sample mem	
 		assign o_sample_mem_wr_en  = (i_wb_adr[27:20] == 8'h05) && (i_wb_cyc && i_wb_we);
 		assign o_sample_mem_dat    =  i_wb_dat[15:0];
 
 		assign output_buffer_addr =   i_wb_adr[9:2];
-		assign output_buffer_ren  = (i_wb_adr[27:16] == 12'h010) && (i_wb_cyc); // output buffer mem	
+		assign output_buffer_ren  =  (i_wb_adr[27:16] == 12'h010) && (i_wb_cyc); // output buffer mem	
 	`else
-		assign o_spike_mem_rd_en = 0;	
-		assign o_spike_mem_wr_en = 0;
+		assign o_spike_mem_rd_en  = 0;	
+		assign o_spike_mem_wr_en  = 0;
 		assign o_sample_mem_rd_en = 0;	
 		assign o_sample_mem_wr_en = 0;
 	`endif
+	
+		assign consumed      = (i_wb_adr[27:16] == 12'h101)  &&  i_wb_cyc;
+		assign boot_ram_wren = (i_wb_adr[31:16] == 16'h4400) && (i_wb_cyc && i_wb_we);
+		assign rst_processor = (i_wb_adr[31:16] == 16'h4200) && (i_wb_cyc && i_wb_we);
 
 	always @(posedge i_wb_clk) begin
+	
+		if (i_wb_rst) begin
+			o_uart_data      <= 0;
+			snn_valid_rst    <= 0;
+			finish_boot      <= 0;
+		end
 		
 		gate_serv_armed = 0; // auto reset after 1 c.c.
 		case (i_wb_adr[27:20])
@@ -271,7 +296,7 @@ module accelerator_if #(
 						o_wb_rdt <= {16'h0, snn_valid}; 
 					end
 					4'he: begin							// valid inference reset
-						o_wb_rdt <= {31'b0,snn_valid_rst};
+						o_wb_rdt <= {31'b0, snn_valid_rst};
 						if (i_wb_cyc & o_wb_ack) begin
 							snn_valid_rst <= i_wb_dat[0];
 						end
@@ -384,7 +409,7 @@ module accelerator_if #(
 
 			//////// GATE CLOCK ///////
 			8'h08: begin
-					o_wb_rdt <= {27'b0,gate_general_int,gate_serv_armed,gate_enc,gate_snn,gate_spi};
+					o_wb_rdt <= {27'b0, gate_general_int, gate_serv_armed, gate_enc, gate_snn, gate_spi};
 					if (i_wb_cyc & i_wb_we) begin
 							gate_spi <= i_wb_dat[0];
 							gate_snn <= i_wb_dat[1];
@@ -392,10 +417,41 @@ module accelerator_if #(
 							gate_serv_armed = i_wb_dat[3];
 							gate_general_int <= i_wb_dat[4];
 					end
-			end
-
+			end			
 			`endif
 			
+			//////// UART RX ///////
+			8'h10: begin
+			    case (i_wb_adr[19:16])
+				
+				// bit check full buffer
+				4'h0: o_wb_rdt <= {31'h0, RX_FULL};
+				
+				// RX buffer
+				4'h1: o_wb_rdt <= {24'h0, RX_BYTE};
+
+			    endcase
+			end
+			
+			
+	
+			//////// BOOT ///////
+			8'h20: begin
+				if (i_wb_cyc & i_wb_we) begin 
+					finish_boot <= i_wb_dat[0];
+				end
+			end
+		
+			//////// RAM ///////
+			8'h40: begin
+				if (i_wb_cyc & i_wb_we) begin
+					boot_ram_addr <= i_wb_adr[12:2];
+					boot_ram_data <= i_wb_dat;
+				end				
+			end
+			
+			
+						
 			///////////////////////////////////////////////////////////////////////
 			///////////////////////////////////////////////////////////////////////
 

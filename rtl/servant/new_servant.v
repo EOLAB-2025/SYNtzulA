@@ -14,7 +14,13 @@ module servant(
 	input  wire [31:0]  i_wb_acc_rdt,
 	input wire          i_wb_acc_ack,
 	
-	input wire enb_debug
+	input wire enb_debug,
+	
+	//BOOT
+	input wire finish_boot,
+	input wire [63:0] boot_ram_data,
+	input wire [12:0] boot_ram_addr,
+	input wire boot_ram_wren
 );
 
     parameter memfile = "zephyr_hello.hex";
@@ -140,23 +146,29 @@ module servant(
       .o_wb_timer_cyc (wb_timer_cyc),
       .i_wb_timer_rdt (wb_timer_rdt));
 
-   servant_ram
-     #(.memfile (memfile),
-       .depth (memsize),
-       .RESET_STRATEGY (reset_strategy))
+   servant_ram // #( 
+      // .memfile(memfile),
+      // .depth (memsize),
+      // .RESET_STRATEGY (reset_strategy)
+    // )
    ram
-     (// Wishbone interface
-      .i_wb_clk (wb_clk),
-      .i_wb_rst (wb_rst),
-      .i_wb_adr (wb_mem_adr[$clog2(memsize)-1:2]),
-      .i_wb_cyc (wb_mem_cyc),
-      .i_wb_we  (wb_mem_we) ,
-      .i_wb_sel (wb_mem_sel),
-      .i_wb_dat (wb_mem_dat),
-      .o_wb_rdt (wb_mem_rdt),
-      .o_wb_ack (wb_mem_ack),
-      
-      .enb_debug(enb_debug)
+     (   // Wishbone interface
+	.i_wb_clk (wb_clk),
+	.i_wb_rst (wb_rst),
+	.i_wb_adr (wb_mem_adr[$clog2(memsize)-1:2]),
+	.i_wb_cyc (wb_mem_cyc),
+	.i_wb_we  (wb_mem_we) ,
+	.i_wb_sel (wb_mem_sel),
+	.i_wb_dat (wb_mem_dat),
+	.o_wb_rdt (wb_mem_rdt),
+	.o_wb_ack (wb_mem_ack),
+
+	.enb_debug(enb_debug),      
+
+	.finish_boot(finish_boot),
+	.boot_ram_data(boot_ram_data),
+	.boot_ram_addr(boot_ram_addr),
+	.boot_ram_wren(boot_ram_wren)
       );
 
 	//`ifdef IEEG

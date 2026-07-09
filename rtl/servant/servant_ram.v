@@ -1,14 +1,14 @@
 `default_nettype none
 module servant_ram
 #(//Memory parameters
-	parameter depth = 256,
-	parameter aw    = $clog2(depth),
-	parameter RESET_STRATEGY = "",
+	parameter depth = 8192,
+	parameter aw    = 13,
+	parameter RESET_STRATEGY = "MINI",
 	parameter memfile = "")
 (
 	input wire 		i_wb_clk,
 	input wire 		i_wb_rst,
-	input wire [aw-1:2] i_wb_adr,
+	input wire [aw-1:2]     i_wb_adr,
 	input wire [31:0] 	i_wb_dat,
 	input wire [3:0] 	i_wb_sel,
 	input wire 		i_wb_we,
@@ -16,7 +16,14 @@ module servant_ram
 	output     [31:0] 	o_wb_rdt,
 	output reg 		o_wb_ack,
 	
-	input wire enb_debug
+	input wire enb_debug,
+	
+	
+	//BOOT
+	input wire finish_boot,
+	input wire [63:0] boot_ram_data,
+	input wire [12:0] boot_ram_addr,
+	input wire boot_ram_wren
 );
 
 	wire [3:0] we = {4{i_wb_we & i_wb_cyc}} & i_wb_sel;
@@ -30,8 +37,26 @@ module servant_ram
        o_wb_ack <= 1'b0;
      else
        o_wb_ack <= i_wb_cyc & !o_wb_ack;
+       
+   
 
-
+	ihp_ram_boot sevant_ram 
+	(	
+	.clk(i_wb_clk),
+	.i_wb_cyc(i_wb_cyc),
+	.we(we),
+	.addr(addr),
+	.dina(i_wb_dat),
+	.dout(o_wb_rdt),
+	.enb_debug(enb_debug),
+	.finish_boot(finish_boot),
+	.boot_ram_data(boot_ram_data),
+	.boot_ram_addr(boot_ram_addr),
+	.boot_ram_wren(boot_ram_wren)
+	);
+	
+	
+/*
 	ihp_ram #(.memfile(memfile)) sevant_ram 
 	(	
 	.clk(i_wb_clk),
@@ -41,25 +66,24 @@ module servant_ram
 	.dout(o_wb_rdt),
 	.enb_debug(enb_debug)	
 	);
-/*
-   always @(posedge i_wb_clk) begin
-      if (we[0]) mem[addr][7:0]   <= i_wb_dat[7:0];
-      if (we[1]) mem[addr][15:8]  <= i_wb_dat[15:8];
-      if (we[2]) mem[addr][23:16] <= i_wb_dat[23:16];
-      if (we[3]) mem[addr][31:24] <= i_wb_dat[31:24];
-      o_wb_rdt <= mem[addr];
-   end
-
-
-
-   initial
-     if(|memfile) begin
-`ifndef ISE
-	$display("Preloading %m from %s", memfile);
-`endif
-	$readmemh(memfile, mem);
-     end
-
 */
 
+
 endmodule
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -22,62 +22,48 @@
 
 module layer_lp
     #(
-    parameter WIDTH = 25,
-    parameter NEURON = 256,   
+	parameter WIDTH = 25,
+	parameter NEURON = 256,   
 	parameter LAYERS = 4,
-    parameter WEIGHTS_FILE_1 = "weights_1.txt",
+	parameter WEIGHTS_FILE_1 = "weights_1.txt",
 	parameter WEIGHTS_FILE_2 = "weights_2.txt",
-    parameter [13:0] current_decay_1 = 4096 - 4096,
+	parameter [13:0] current_decay_1 = 4096 - 4096,
 	parameter [13:0] current_decay_2 = 4096 - 4096,
 	parameter [13:0] current_decay_3 = 4096 - 4096,
 	parameter [13:0] current_decay_4 = 4096 - 4096,
-    parameter [13:0] voltage_decay_1 = 4096 - 415,
+	parameter [13:0] voltage_decay_1 = 4096 - 415,
 	parameter [13:0] voltage_decay_2 = 4096 - 415,
 	parameter [13:0] voltage_decay_3 = 4096 - 415,
 	parameter [13:0] voltage_decay_4 = 4096 - 415,
-    parameter [WIDTH-1:0]  threshold_1 = 6,
-    parameter [WIDTH-1:0]  threshold_2 = 6,
-    parameter [WIDTH-1:0]  threshold_3 = 6,
-    parameter [WIDTH-1:0]  threshold_4 = 6,
-    parameter WEIGHT_DEPTH = 8192
+	parameter [WIDTH-1:0]  threshold_1 = 6,
+	parameter [WIDTH-1:0]  threshold_2 = 6,
+	parameter [WIDTH-1:0]  threshold_3 = 6,
+	parameter [WIDTH-1:0]  threshold_4 = 6,
+	parameter WEIGHT_DEPTH = 8192
     )
     (
-    input clk, rst,
-    input en,
-    input [3:0] spike_in,
-    input active_group_in,
+	input clk, rst,
+	input en,
+	input [3:0] spike_in,
+	input active_group_in,
 
-	input [clogb2(WEIGHT_DEPTH-1)-1:0] weight_rd_addr,
 	input acc_clear, acc_clear_and_go,
 	output convolution_pipe_full,    
 	input [clogb2(LAYERS-1)-1:0] layer_id,
 
-    output valid,
-    output [1:0] spike_out,
-    output active_group_out,
-    output reg valid_potential,
-    output signed [WIDTH-1:0] neuron_lp_voltage,
+	output valid,
+	output [1:0] spike_out,
+	output active_group_out,
+	output reg valid_potential,
+	output signed [WIDTH-1:0] neuron_lp_voltage,
 	output integrated_neuron,
-    
-    input [7:0] weight_mem_L1_wren,
-    input [clogb2(WEIGHT_DEPTH-1)-1:0] weight_mem_L1_wr_addr,
-    input [16-1:0] weight_mem_L1_data_in,
-    output [16-1:0] weight_mem_L1_data_out,
-    input weight_mem_L1_ena,
-    input [7:0] weight_mem_L2_wren,
-    input [clogb2(WEIGHT_DEPTH-1)-1:0] weight_mem_L2_wr_addr,
-    input [16-1:0] weight_mem_L2_data_in,
-    output [16-1:0] weight_mem_L2_data_out,
-    input weight_mem_L2_ena,
-    output [7:0] weight_debug,
-    output weight_en_debug,
-    
-    input enb_debug
+
+	input signed [31:0] weights,  
 	
+	input enb_debug
+
     );
 
-assign weight_en_debug = en;
-assign weight_debug = weight_rd_addr[7:0];//weights_out_1[7:0];
 
 /////////////////////////////////////////////////////////////////
 //               _       _     _                               //
@@ -90,6 +76,7 @@ assign weight_debug = weight_rd_addr[7:0];//weights_out_1[7:0];
 
 localparam WEIGHT = 8;
 
+/*
 wire signed [31:0] weights;  
 
 weights_mem_ihp
@@ -116,7 +103,7 @@ weight_mem
   .addrb(weight_rd_addr),          // Port B address bus, it goes in the accumulator
   .doutb(weights)              // Port B RAM output data
  );
-
+*/
 ///////////////////////////////////////////////////////////
 //                            _       _   _              //
 //   ___ ___  _ ____   _____ | |_   _| |_(_) ___  _ __   //
@@ -168,19 +155,19 @@ neuron_lp
     #(.DEPTH(NEURON),.WIDTH(WIDTH),.WEIGHT(WEIGHT),.LAYERS(LAYERS))
  neuron_lp_i
     (
-    .clk(clk), .rst(rst), .en(acc_clear_and_go),
-    .current_decay_1(current_decay_1), .voltage_decay_1(voltage_decay_1), .threshold_1(threshold_1),
-    .current_decay_2(current_decay_2), .voltage_decay_2(voltage_decay_2), .threshold_2(threshold_2),
+	.clk(clk), .rst(rst), .en(acc_clear_and_go),
+	.current_decay_1(current_decay_1), .voltage_decay_1(voltage_decay_1), .threshold_1(threshold_1),
+	.current_decay_2(current_decay_2), .voltage_decay_2(voltage_decay_2), .threshold_2(threshold_2),
 	.current_decay_3(current_decay_3), .voltage_decay_3(voltage_decay_3), .threshold_3(threshold_3),
-    .current_decay_4(current_decay_4), .voltage_decay_4(voltage_decay_4), .threshold_4(threshold_4),    
+	.current_decay_4(current_decay_4), .voltage_decay_4(voltage_decay_4), .threshold_4(threshold_4),    
 	.synaptic_current(stimulus),
-    .layer_id(layer_id),
-    
-    .valid(valid),
-    .spike_p(spike_out),
-    .active_group(active_group_out),
-    .voltage_ready(integrated_neuron),
-    .voltage(neuron_lp_voltage)
+	.layer_id(layer_id),
+
+	.valid(valid),
+	.spike_p(spike_out),
+	.active_group(active_group_out),
+	.voltage_ready(integrated_neuron),
+	.voltage(neuron_lp_voltage)
     );
 
 

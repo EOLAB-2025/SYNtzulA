@@ -52,7 +52,8 @@ module delta_modulator_multichannel #(
     
     wire signed [WIDTH-1:0] data_old; // old sample
 
-    ihp_dualport_256x48_dualmem
+    //ihp_dualport_256x48_dualmem
+    ihp_fake_dualport
     #(
       .RAM_WIDTH(WIDTH),        
       .RAM_DEPTH(CHANNELS),             
@@ -79,7 +80,7 @@ module delta_modulator_multichannel #(
       .RAM_WIDTH(WIDTH),        
       .RAM_DEPTH(CHANNELS),             
       .RAM_PERFORMANCE("LOW_LATENCY"), 
-      .INIT_FILE("sim/mem/emg/delta.txt")      
+      .INIT_FILE("./sim/mem/emg/delta.txt")      
 	)
     delta_mem
      (

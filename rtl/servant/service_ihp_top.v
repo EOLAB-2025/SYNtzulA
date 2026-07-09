@@ -67,7 +67,8 @@ module service_ihp_top #(
 	output wire o_flash_sck,
 	output wire o_flash_mosi,
 	input wire  i_flash_miso,
-	output wire o_txd	
+	output wire o_txd	,
+	input wire i_rxd
 );	
 	
     localparam WEIGHT_DEPTH_12 = 8192;
@@ -122,6 +123,13 @@ module service_ihp_top #(
 		assign wb_clk_enc   = wb_clk;
 		assign wb_clk_serv  = wb_clk;
 		
+		/*
+		gfcm gfcm_spi( rst_gfcm, spi_clk, 1'b0, gate_spi,  spi_clk_g);		
+		gfcm gfcm_snn( rst_gfcm, wb_clk,  1'b0, gate_snn,  wb_clk_snn);
+		gfcm gfcm_enc( rst_gfcm, wb_clk,  1'b0, gate_enc,  wb_clk_enc);		
+		gfcm gfcm_serv(rst_gfcm, wb_clk,  1'b0, gate_serv, wb_clk_serv);
+		*/
+		
 	`else
 		assign spi_clk_g    = spi_clk;
 		assign wb_clk_snn   = wb_clk;
@@ -147,9 +155,10 @@ module service_ihp_top #(
 				.wb_clk    (i_clk  ),
 				.wb_rst    (wb_rst ),
 				.timer_clk (timer_clk),
-				.enb_debug(1'b1)
+				.enb_debug(1'b1),
 				
-				//.o_txd(o_txd)
+				.o_txd(o_txd),
+				.i_rxd(i_rxd)
 				
 				//.gate_general(gate_general)
 				//.gate_snn       (gate_snn),

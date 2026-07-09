@@ -65,45 +65,45 @@ module snn_lp
 	parameter WEIGHT_DEPTH_34 = 8192
 )
     (
-    // input
-    input clk, rst,
-    input en,
-    input [3:0] spike_in,
-    input active_group_in,
+	// input
+	input clk, clk_output_buffer, rst,
+	input en,
+	input [3:0] spike_in,
+	input active_group_in,
 
-    // output
-    output valid,	
+	// output
+	output valid,	
 	output valid_spike,
-    output [3:0] spike_out,
+	output [3:0] spike_out,
 	output integrated_neuron,
 
-    // weight mem 1
-    input [7:0] weight_mem_L1_wren,
-    input [clogb2(WEIGHT_DEPTH_12-1)-1:0] weight_mem_L1_wr_addr,
-    input [16-1:0] weight_mem_L1_data_in,
-    output [16-1:0] weight_mem_L1_data_out,
-    input weight_mem_L1_ena,
+	// weight mem 1
+	input [7:0] weight_mem_L1_wren,
+	input [clogb2(WEIGHT_DEPTH_12-1)-1:0] weight_mem_L1_wr_addr,
+	input [16-1:0] weight_mem_L1_data_in,
+	output [16-1:0] weight_mem_L1_data_out,
+	input weight_mem_L1_ena,
 
-    // weight mem 2
-    input [7:0] weight_mem_L2_wren,
-    input [clogb2(WEIGHT_DEPTH_12-1)-1:0] weight_mem_L2_wr_addr,
-    input [16-1:0] weight_mem_L2_data_in,
-    output [16-1:0] weight_mem_L2_data_out,
-    input weight_mem_L2_ena,
+	// weight mem 2
+	input [7:0] weight_mem_L2_wren,
+	input [clogb2(WEIGHT_DEPTH_12-1)-1:0] weight_mem_L2_wr_addr,
+	input [16-1:0] weight_mem_L2_data_in,
+	output [16-1:0] weight_mem_L2_data_out,
+	input weight_mem_L2_ena,
 
-    // weight mem 3
-    input [7:0] weight_mem_L3_wren,
-    input [clogb2(WEIGHT_DEPTH_34-1)-1:0] weight_mem_L3_wr_addr,
-    input [16-1:0] weight_mem_L3_data_in,
-    output [16-1:0] weight_mem_L3_data_out,
-    input weight_mem_L3_ena,
+	// weight mem 3
+	input [7:0] weight_mem_L3_wren,
+	input [clogb2(WEIGHT_DEPTH_34-1)-1:0] weight_mem_L3_wr_addr,
+	input [16-1:0] weight_mem_L3_data_in,
+	output [16-1:0] weight_mem_L3_data_out,
+	input weight_mem_L3_ena,
 
-    // weight mem 4
-    input [7:0] weight_mem_L4_wren,
-    input [clogb2(WEIGHT_DEPTH_34-1)-1:0] weight_mem_L4_wr_addr,
-    input [16-1:0] weight_mem_L4_data_in,
-    output [16-1:0] weight_mem_L4_data_out,
-    input weight_mem_L4_ena,
+	// weight mem 4
+	input [7:0] weight_mem_L4_wren,
+	input [clogb2(WEIGHT_DEPTH_34-1)-1:0] weight_mem_L4_wr_addr,
+	input [16-1:0] weight_mem_L4_data_in,
+	output [16-1:0] weight_mem_L4_data_out,
+	input weight_mem_L4_ena,
 
 	//spike mem 1 & 2
 	output wire [7:0] o_spike_mem_dat,
@@ -121,11 +121,11 @@ module snn_lp
 	input output_buffer_ren,
 	input [7:0] output_buffer_addr,
 	output [31:0] output_buffer_out,
-	
-	
+
+
 	output output_buffer_wr_en_debug,
 	output signed [WIDTH-1:0] p1, p2,
-	
+
 	input enb_debug
     );
     
@@ -159,6 +159,39 @@ wire v1,v2;
 wire [1:0] s1,s2;
 wire ag1,ag2;
 
+wire signed [31:0] weights_l1, weights_l2;
+
+weights_mem_ihp_dc_v2 wmem (
+
+   .clk   (clk),                                                                           
+   .rst   (rst),                        
+   .regceb(1'b1), 
+   
+   .addra1(weight_mem_L1_wr_addr),   
+   .dina1 (weight_mem_L1_data_in),
+   .ena1  (weight_mem_L1_ena),
+   
+   .addra2(weight_mem_L2_wr_addr),
+   .dina2 (weight_mem_L2_data_in), 
+   .ena2  (weight_mem_L2_ena),
+   
+   .addra3(weight_mem_L3_wr_addr),
+   .dina3 (weight_mem_L3_data_in), 
+   .ena3  (weight_mem_L3_ena),
+   
+   .addra4(weight_mem_L4_wr_addr),
+   .dina4 (weight_mem_L4_data_in), 
+   .ena4  (weight_mem_L4_ena),
+
+
+   .addrb (weight_rd_addr),
+   .enb   (1'b1),                          
+   .doutb ({weights_l2, weights_l1})
+
+);
+
+
+
 /*
   _     ____            _     _ 
  | |   |  _ \          | |   / |
@@ -170,58 +203,46 @@ wire ag1,ag2;
 wire signed [WIDTH-1:0] voltage_1;
 layer_lp
     #(
-    .WIDTH(WIDTH),
-    .NEURON(TOTAL_NEURONS/2),   
+	.WIDTH(WIDTH),
+	.NEURON(TOTAL_NEURONS/2),   
 	.LAYERS(LAYERS),
-    .WEIGHTS_FILE_1(WEIGHTS_FILE_1),
+	.WEIGHTS_FILE_1(WEIGHTS_FILE_1),
 	.WEIGHTS_FILE_2(WEIGHTS_FILE_2),
-    .current_decay_1(current_decay_1),
+	.current_decay_1(current_decay_1),
 	.current_decay_2(current_decay_2),
 	.current_decay_3(current_decay_3),
 	.current_decay_4(current_decay_4),
-    .voltage_decay_1(voltage_decay_1),
+	.voltage_decay_1(voltage_decay_1),
 	.voltage_decay_2(voltage_decay_2),
 	.voltage_decay_3(voltage_decay_3),
 	.voltage_decay_4(voltage_decay_4),
-    .threshold_1(threshold_1),
+	.threshold_1(threshold_1),
 	.threshold_2(threshold_2),
 	.threshold_3(threshold_3),
 	.threshold_4(threshold_4),    
-    .WEIGHT_DEPTH(2**(WEIGHT_ADDRESS_SIZE))
+	.WEIGHT_DEPTH(2**(WEIGHT_ADDRESS_SIZE))
     )
 layer_lp_l1_i
     (
-    .clk(clk), .rst(rst),
-    .en(layer_enable_dd),
-    .spike_in(spike_mem_out),
-    .active_group_in(),
-    
-	.weight_rd_addr(weight_rd_addr),
+	.clk(clk), .rst(rst),
+	.en(layer_enable_dd),
+	.spike_in(spike_mem_out),
+	.active_group_in(),
+
 	.acc_clear(layer_integrated), .acc_clear_and_go(convolution_valid),
 	.convolution_pipe_full(convolution_pipe_full),    
 	.layer_id(layer_counter),
 
-    .valid(v1),
-    .spike_out(s1),
-    .active_group_out(ag1),
-    .integrated_neuron(integrated_neuron_1),
-    .neuron_lp_voltage(voltage_1),
+	.valid(v1),
+	.spike_out(s1),
+	.active_group_out(ag1),
+	.integrated_neuron(integrated_neuron_1),
+	.neuron_lp_voltage(voltage_1),
 
-   .weight_mem_L1_wren(weight_mem_L1_wren),
-   .weight_mem_L1_wr_addr(weight_mem_L1_wr_addr),
-   .weight_mem_L1_data_in(weight_mem_L1_data_in),
-   .weight_mem_L1_data_out(weight_mem_L1_data_out),
-   .weight_mem_L1_ena(weight_mem_L1_ena),
-   .weight_mem_L2_wren(weight_mem_L2_wren),
-   .weight_mem_L2_wr_addr(weight_mem_L2_wr_addr),
-   .weight_mem_L2_data_in(weight_mem_L2_data_in),
-   .weight_mem_L2_data_out(weight_mem_L2_data_out),
-   .weight_mem_L2_ena(weight_mem_L2_ena),
-   
-   .enb_debug(enb_debug)
+	.enb_debug(enb_debug),
+	
+	.weights(weights_l1)
 
-	//.weight_debug(weight_debug),
-	//.weight_en_debug(weight_en_debug)
     );    
 /*
   _     ____            _     ____  
@@ -234,56 +255,45 @@ layer_lp_l1_i
 wire signed [WIDTH-1:0] voltage_2;
 layer_lp
     #(
-    .WIDTH(WIDTH),
-    .NEURON(TOTAL_NEURONS/2),      
+	.WIDTH(WIDTH),
+	.NEURON(TOTAL_NEURONS/2),      
 	.LAYERS(LAYERS),
-    .WEIGHTS_FILE_1(WEIGHTS_FILE_3),
+	.WEIGHTS_FILE_1(WEIGHTS_FILE_3),
 	.WEIGHTS_FILE_2(WEIGHTS_FILE_4),
-    .current_decay_1(current_decay_1),
+	.current_decay_1(current_decay_1),
 	.current_decay_2(current_decay_2),
 	.current_decay_3(current_decay_3),
 	.current_decay_4(current_decay_4),
-    .voltage_decay_1(voltage_decay_1),
+	.voltage_decay_1(voltage_decay_1),
 	.voltage_decay_2(voltage_decay_2),
 	.voltage_decay_3(voltage_decay_3),
 	.voltage_decay_4(voltage_decay_4),
-    .threshold_1(threshold_1),
+	.threshold_1(threshold_1),
 	.threshold_2(threshold_2),
 	.threshold_3(threshold_3),
 	.threshold_4(threshold_4),    
-    .WEIGHT_DEPTH(2**(WEIGHT_ADDRESS_SIZE))
+	.WEIGHT_DEPTH(2**(WEIGHT_ADDRESS_SIZE))
     )
 layer_lp_l2_i
     (
-    .clk(clk), .rst(rst),
-    .en(layer_enable_dd),
-    .spike_in(spike_mem_out),
-    .active_group_in(),
-    
-	.weight_rd_addr(weight_rd_addr),
+	.clk(clk), .rst(rst),
+	.en(layer_enable_dd),
+	.spike_in(spike_mem_out),
+	.active_group_in(),
+
 	.acc_clear(layer_integrated), .acc_clear_and_go(convolution_valid),
 	.convolution_pipe_full(convolution_pipe_full),    
 	.layer_id(layer_counter),    
-    
-    .valid(v2),
-    .spike_out(s2),
-    .active_group_out(ag2),
-    .neuron_lp_voltage(voltage_2),
+
+	.valid(v2),
+	.spike_out(s2),
+	.active_group_out(ag2),
+	.neuron_lp_voltage(voltage_2),
 	.integrated_neuron(integrated_neuron_2),
-    
-   .weight_mem_L1_wren(weight_mem_L3_wren),
-   .weight_mem_L1_wr_addr(weight_mem_L3_wr_addr),
-   .weight_mem_L1_data_in(weight_mem_L3_data_in),
-   .weight_mem_L1_data_out(weight_mem_L3_data_out),
-   .weight_mem_L1_ena(weight_mem_L3_ena),
-   .weight_mem_L2_wren(weight_mem_L4_wren),
-   .weight_mem_L2_wr_addr(weight_mem_L4_wr_addr),
-   .weight_mem_L2_data_in(weight_mem_L4_data_in),
-   .weight_mem_L2_data_out(weight_mem_L4_data_out),
-   .weight_mem_L2_ena(weight_mem_L4_ena),
-   
-   
-   .enb_debug(enb_debug)
+
+	.enb_debug(enb_debug),
+	
+	.weights(weights_l2)
     );  
 
 // converge
@@ -685,7 +695,7 @@ ihp_single_port_256x48 #(
   .addra(integrated_neurons_cnt),   //  
   .addrb(output_buffer_addr),  
   .dina(output_buffer_din),   
-  .clk(clk),      
+  .clk(clk_output_buffer),      
   .wea(output_buffer_wr_en),      
   .ena(output_buffer_wr_en),      
   .enb(output_buffer_ren),      

@@ -77,7 +77,9 @@ module service_ihp #(
 	
 	output output_buffer_wr_en_debug,
 	output signed [WIDTH-1:0] p1, p2,
-	input enb_debug	
+	input enb_debug,
+	
+	input i_uart_rx	
 			
 );	
 	
@@ -137,6 +139,14 @@ module service_ihp #(
 	// wire gate_spi, gate_snn, gate_enc, gate_serv, gate_general;
 	wire gate_spi, gate_enc;
 	wire timer_irq;
+	
+	
+	//BOOT
+	wire finish_boot;
+	wire [63:0] boot_ram_data;
+	wire [12:0] boot_ram_addr;
+	wire boot_ram_wren;
+	wire rst_processor;
 
 
 	servant #(
@@ -146,7 +156,7 @@ module service_ihp #(
 	servant(
 		.wb_clk (wb_clk),
 		.timer_clk(timer_clk),
-		.wb_rst (wb_rst),
+		.wb_rst (wb_rst || rst_processor),
 		
 		.led      (led),
 		.buttons(buttons),
@@ -159,7 +169,12 @@ module service_ihp #(
 		.i_wb_acc_rdt   (wb_acc_rdt),
 		.i_wb_acc_ack   (wb_acc_ack),
 		
-		.enb_debug(enb_debug)
+		.enb_debug(enb_debug),
+		
+		.finish_boot(finish_boot),
+		.boot_ram_data(boot_ram_data),
+		.boot_ram_addr(boot_ram_addr),
+		.boot_ram_wren(boot_ram_wren)
 	);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -182,7 +197,7 @@ module service_ihp #(
 // 																								  //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	accelerator_top 
+	accelerator_top
 	acc_top(
 	
 	.wb_clk(wb_clk),
@@ -227,10 +242,60 @@ module service_ihp #(
 	.o_sample_mem_dat(i_sample_mem_dat),
 	.o_encoding_bypass(encoding_bypass),
 	.gate_spi(gate_spi), .gate_snn(gate_snn), .gate_enc(gate_enc), .gate_serv(gate_serv), 
-	.timer_irq(timer_irq), .gate_general(gate_general)
+	.timer_irq(timer_irq), .gate_general(gate_general), .uart_rx(i_uart_rx),
+	
+	.finish_boot(finish_boot), .boot_ram_data(boot_ram_data), .boot_ram_addr(boot_ram_addr), .boot_ram_wren(boot_ram_wren), .rst_processor(rst_processor)
     );
 
+/*
+	accelerator_top_ps
+	acc_top_ps(
+	
+	.wb_clk(wb_clk),
+	.spi_clk(wb_clk),
+	.wb_rst(wb_rst),
 
+	.i_cpu_adr(wb_acc_adr),
+	.i_cpu_dat(wb_acc_dat),
+	.i_cpu_we(wb_acc_we),
+	.i_cpu_cyc(wb_acc_cyc),
+	.o_cpu_rdt(),
+	.o_cpu_ack(),
+
+	.o_flash_sck(),
+	.o_flash_mosi(),
+	.o_flash_ss(),
+	.i_flash_miso(i_flash_miso),
+
+	.i_snn_valid(acc_snn_valid),
+	.output_buffer_ren(),
+	.output_buffer_addr(),
+	.output_buffer_out(output_buffer_out),
+	.o_snn_adr_w1(),
+	.o_snn_adr_w2(),
+	.o_snn_adr_w3(),
+	.o_snn_adr_w4(),
+	.o_snn_we(),
+	.o_snn_dat(),
+	.snn_input_channels(), 
+	.neuron_1(), .neuron_2(), .neuron_3(), .neuron_4(), 
+	.layers(),
+	.o_txd(),
+	.i_spike_mem_dat(o_spike_mem_dat),
+	.o_spike_mem_adr(),
+	.o_spike_mem_rd_en(),		
+	.o_spike_mem_wr_en(),
+	.o_spike_mem_dat(),
+	.i_sample_mem_dat(o_sample_mem_dat),	
+	.o_sample_mem_adr(),
+	.o_sample_mem_rd_en(),
+	.o_sample_mem_wr_en(),
+	.o_sample_mem_dat(),
+	.o_encoding_bypass(),
+	.gate_spi(), .gate_snn(), .gate_enc(), .gate_serv(), 
+	.timer_irq(timer_irq), .gate_general(gate_general)
+    );
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -264,8 +329,7 @@ module service_ihp #(
      
     mosquito
     (
-	.clk_enc    (wb_clk),
-	.clk_snn    (wb_clk), 
+	.clk        (wb_clk), 
 	.rst        (wb_rst),
 	
 	.en         (acc_snn_we[4]),
@@ -323,7 +387,8 @@ module service_ihp #(
 	.p1(p1), 
 	.p2(p2),
 	
-	.enb_debug(enb_debug)
+	.enb_debug(enb_debug),
+	.gate_general(gate_general)
     );
     
 

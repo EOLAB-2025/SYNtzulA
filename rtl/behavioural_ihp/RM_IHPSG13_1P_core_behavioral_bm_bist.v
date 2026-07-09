@@ -71,11 +71,6 @@ input wire                      A_BIST_CLK;
 reg [P_DATA_WIDTH-1:0]    memory [0:2**(P_ADDR_WIDTH)-1]; // memory
 reg [P_DATA_WIDTH-1:0]    dr_r;
 
-wire [63:0] debug1, debug2, debug3;
-assign debug1 = memory[0];
-assign debug2 = memory[2048];
-assign debug3 = memory[3000];
-
 wire  [P_ADDR_WIDTH-1:0]	ADDR_MUX;
 wire  [P_DATA_WIDTH-1:0] 	DIN_MUX;
 wire  [P_DATA_WIDTH-1:0]	BM_MUX;
@@ -122,11 +117,24 @@ assign A_DOUT=  dr_r;
   endgenerate
 
 
-wire [63:0] debug200;
-wire [63:0] debug400;
+  generate
+	  genvar idx;
+	  for(idx = 0; idx < 16; idx = idx+1) begin
+		wire [63:0] tmp;
+		assign tmp = memory[idx];
+	  end
+  endgenerate
 
-assign debug200 = memory[200];
-assign debug400 = memory[400];
+wire [63:0] debug0, debug1, debug2, debug3, debug4, debug5;
+
+
+assign debug0 = memory[0];
+assign debug1 = memory[1];
+assign debug2 = memory[2];
+assign debug3 = memory[3];
+assign debug4 = memory[4];
+assign debug5 = memory[5];
+
 
 endmodule
 

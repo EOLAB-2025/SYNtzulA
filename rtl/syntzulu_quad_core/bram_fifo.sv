@@ -61,7 +61,9 @@ always @(posedge clk)
 		    else
 		        wr_cnt <= 0;
 
-ihp_dualport_256x48_dualmem
+//ihp_dualport_256x48_dualmem
+ihp_fake_dualport
+//ihp_fake_dualport_little
 #(
   .RAM_WIDTH(DATA_WIDTH),          // Specify RAM data width
   .RAM_DEPTH(DEPTH),               // Specify RAM depth (number of entries)

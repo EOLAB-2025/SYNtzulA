@@ -49,11 +49,12 @@ module encoding_slot
 
 	input wire bypass,
 	
-	input wire enb_debug
+	input wire enb_debug,
+	output wire input_buffer_valid
     );
 
 wire signed [DW-1:0] data_out_buffer;
-wire input_buffer_valid;
+//wire input_buffer_valid;
 
 input_buffer
 	#(

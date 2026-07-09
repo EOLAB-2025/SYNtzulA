@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: Gianluca Leone
 // 
 // Create Date: 26.01.2024 15:32
 // Design Name: 
@@ -27,19 +26,19 @@ module input_buffer
     parameter DW = 15
 )
 (
-    input clk, rst,
-    input en,
-    input signed [15:0] data_in,
-    
-    output reg valid,
-    output signed [DW-1:0] data_out,
-	
+	input clk, rst,
+	input en,
+	input signed [15:0] data_in,
+
+	output reg valid,
+	output signed [DW-1:0] data_out,
+
 	input external_access_en,
 	input [clogb2(CHANNELS-1)-1:0] external_addr,
 	output signed [15:0] external_data_out,
 	input external_access_wren,
 	input signed [15:0] external_data_in,
-	
+
 	input enb_debug
     );
 

@@ -24,12 +24,16 @@
 
   
 module SerialTransmitter #(
-  parameter pClockFrequency = 24000000,  
+  parameter pClockFrequency = 40000000,  
     //^ System clock frequency.
       
-  parameter pBaudRate = 4000000     
+  parameter pBaudRate = 115200   ,  
     //^ Serial output baud rate (..., 9600, 115200, 2000000, ...)
     //^ Can be value from arbitrary low to max 1/3 of pClockFrequency.
+    
+  parameter    pTicksPerBit = pClockFrequency / pBaudRate,
+  parameter    pBitTimerMsb = $clog2(pTicksPerBit) - 1,
+  parameter    pLastTickOfBit = pTicksPerBit - 1
 )(
   input wire iClock,       
     //^ System clock with frequency specified in the parameter pClockFrequency.
@@ -47,18 +51,17 @@ module SerialTransmitter #(
     //^ Serial data output with baudrate specified in the parameter pBaudRate.
     
 
-  ,input wire iReset
-    //^ Reset module to initial state (reset is synchronized with posedge, set to 1 for one clock is enough).
-    //^ Module can begin transmit data in next clock tick after the iReset was set to 0.
+  ,input wire iReset    
+    
 
 );
 
-
+/*
 localparam
   pTicksPerBit = pClockFrequency / pBaudRate,
   pBitTimerMsb = $clog2(pTicksPerBit) - 1,
   pLastTickOfBit = pTicksPerBit - 1;
-
+*/
 localparam
   pTicksPerFrame = pClockFrequency * 10 / pBaudRate,
   pInaccuracyPerFrame = pTicksPerFrame - pTicksPerBit * 10,
@@ -113,9 +116,11 @@ localparam // $State:2,st
 reg [pBitTimerMsb:0] cBitTimer;
 reg cBitSent;
 
+
 reg [1:0] cState;
 reg [7:0] cBuffer;
 reg [2:0] cBitIndex;
+
 
 reg cReady; 
 assign oReady = cReady;

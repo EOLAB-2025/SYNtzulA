@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+`timescale 1ns / 1ns
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -75,7 +75,7 @@ module Syntzulu
 	parameter WEIGHT_DEPTH_34 = 8192
 )
 (
-    input clk_enc, clk_snn, rst,
+    input clk,  rst,
     input en,
     input signed [15:0] data_in,
     input detect,
@@ -144,7 +144,9 @@ module Syntzulu
 	output output_buffer_wr_en_debug,
 	output signed [WIDTH-1:0] p1, p2,
 	
-	input enb_debug
+	input enb_debug,
+	
+	input gate_general
     );
 
  localparam SPIKE  = 4;
@@ -190,7 +192,9 @@ encoding_slot_i
 	i_sample_mem_dat,	
 	encoding_bypass,
 	
-	enb_debug
+	enb_debug,
+	
+	input_buffer_valid
     );   
 
 //////////////////////////////////////////////
@@ -218,6 +222,69 @@ encoding_slot_i
 wire valid_potential;
 wire [SPIKE-1:0] spike_out_snn;
 wire valid_spike;
+
+`ifdef SNN_PS
+
+	snn_lp_ps	snn_lp_ps
+	(
+	.clk(clk_snn),
+	.rst(rst),
+	.en(valid_bin),
+	.spike_in(spike_bin),
+	.active_group_in(active_group_out_bin),
+
+	.valid(valid_potential), 	
+	.valid_spike(valid_spike),
+	.spike_out(spike_out_snn),
+	.integrated_neuron(integrated_neuron),
+
+	.weight_mem_L1_wren(weight_mem_L1_wren),
+	.weight_mem_L1_wr_addr(weight_mem_L1_wr_addr),
+	.weight_mem_L1_data_in(weight_mem_L1_data_in),
+	.weight_mem_L1_data_out(weight_mem_L1_data_out),
+	.weight_mem_L1_ena(weight_mem_L1_ena),
+	
+	.weight_mem_L2_wren(weight_mem_L2_wren),
+	.weight_mem_L2_wr_addr(weight_mem_L2_wr_addr),
+	.weight_mem_L2_data_in(weight_mem_L2_data_in),
+	.weight_mem_L2_data_out(weight_mem_L2_data_out),
+	.weight_mem_L2_ena(weight_mem_L2_ena),
+	
+	.weight_mem_L3_wren(weight_mem_L3_wren),
+	.weight_mem_L3_wr_addr(weight_mem_L3_wr_addr),
+	.weight_mem_L3_data_in(weight_mem_L3_data_in),
+	.weight_mem_L3_data_out(weight_mem_L3_data_out),
+	.weight_mem_L3_ena(weight_mem_L3_ena),
+	
+	.weight_mem_L4_wren(weight_mem_L4_wren),
+	.weight_mem_L4_wr_addr(weight_mem_L4_wr_addr),
+	.weight_mem_L4_data_in(weight_mem_L4_data_in),
+	.weight_mem_L4_data_out(weight_mem_L4_data_out),
+	.weight_mem_L4_ena(weight_mem_L4_ena),
+	
+	.o_spike_mem_dat(o_spike_mem_dat),
+	.i_spike_mem_adr(i_spike_mem_adr),
+	.i_spike_mem_rd_en(i_spike_mem_rd_en),
+	.i_spike_mem_wr_en(i_spike_mem_wr_en),
+	.i_spike_mem_dat(i_spike_mem_dat),
+	
+	.snn_input_channels(snn_input_channels),
+	.neuron_1(neuron_1),
+	.neuron_2(neuron_2),
+	.neuron_3(neuron_3),
+	.neuron_4(neuron_4),
+	.layers(layers),
+	
+	.output_buffer_ren(output_buffer_ren),
+	.output_buffer_addr(output_buffer_addr),
+	.output_buffer_out(output_buffer_out),
+	
+	.output_buffer_wr_en_debug(output_buffer_wr_en_debug),
+	.p1(p1),
+	.p2(p2)
+	); 
+
+`else
 
 	snn_lp
 	#(
@@ -261,6 +328,7 @@ wire valid_spike;
 	snn_lp_i
 	(
 	.clk(clk_snn),
+	.clk_output_buffer(clk),
 	.rst(rst),
 	.en(valid_bin),
 	.spike_in(spike_bin),
@@ -318,6 +386,14 @@ wire valid_spike;
 	
 	.enb_debug(enb_debug)
 	); 
+
+`endif
+
+    wire gate_snn, gate_enc;
+    fsm_on_off       gating_snn_fsm (clk, rst, input_buffer_valid, valid_potential, gate_snn);    
+    OPENROAD_CLKGATE gating_snn     (clk, gate_snn, clk_snn);   
+    
+    assign clk_enc = clk;
 
 
 ///////////////////////////////////////////////////////////////////////////

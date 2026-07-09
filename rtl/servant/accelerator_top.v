@@ -19,7 +19,7 @@ module accelerator_top #(
 	input  wire         i_cpu_we,
 	input  wire         i_cpu_cyc,
 	output wire [31:0]  o_cpu_rdt,
-	output  wire 		o_cpu_ack,
+	output  wire        o_cpu_ack,
 
 	// flash
 	output wire         o_flash_sck,
@@ -64,7 +64,17 @@ module accelerator_top #(
 	// gate clocks
 	output wire gate_spi, gate_snn, gate_enc, gate_serv, 
 	input  wire timer_irq, 
-	output wire gate_general
+	output wire gate_general,
+	
+	input uart_rx,
+
+	//BOOT
+	output wire finish_boot,
+	output wire [63:0] boot_ram_data,
+	output wire [12:0] boot_ram_addr,
+	output wire boot_ram_wren,
+	output wire rst_processor
+
     );
     
     wire [23:0] spi_if_adr;
@@ -85,6 +95,10 @@ module accelerator_top #(
     wire        uart_if_send;
 	wire        uart_wren;
 	wire 		o_uart_hp;
+
+    wire [7:0] RX_BYTE;
+    wire consumed;
+    wire RX_FULL;
 
 `ifdef PS_ACC_TOP
 
@@ -108,10 +122,12 @@ module accelerator_top #(
 	.output_buffer_ren(output_buffer_ren),
 	.output_buffer_addr(output_buffer_addr),
 	.output_buffer_out(output_buffer_out), 
+	
 	.o_snn_adr_w1   (o_snn_adr_w1),
 	.o_snn_adr_w2   (o_snn_adr_w2),
 	.o_snn_adr_w3   (o_snn_adr_w3),
 	.o_snn_adr_w4   (o_snn_adr_w4),
+	
 	.o_snn_we       (o_snn_we),        
 	.o_snn_dat      (o_snn_dat),
 	.snn_input_channels(snn_input_channels), 
@@ -151,7 +167,10 @@ module accelerator_top #(
 	.o_encoding_bypass(o_encoding_bypass),
 
 	.gate_spi(gate_spi), .gate_snn(gate_snn), .gate_enc(gate_enc), .gate_serv(gate_serv), 
-	.timer_irq(timer_irq), .gate_general(gate_general)
+	.timer_irq(timer_irq), .gate_general(gate_general),
+	
+	.consumed(consumed), .RX_FULL(RX_FULL), .RX_BYTE(RX_BYTE),	
+	.finish_boot(finish_boot), .boot_ram_data(boot_ram_data), .boot_ram_addr(boot_ram_addr), .boot_ram_wren(boot_ram_wren), .rst_processor(rst_processor)
     );
 
 `else 
@@ -221,7 +240,11 @@ module accelerator_top #(
 	.o_encoding_bypass(o_encoding_bypass),
 
 	.gate_spi(gate_spi), .gate_snn(gate_snn), .gate_enc(gate_enc), .gate_serv(gate_serv), 
-	.timer_irq(timer_irq), .gate_general(gate_general)
+	.timer_irq(timer_irq), .gate_general(gate_general),
+	
+	
+	.consumed(consumed), .RX_FULL(RX_FULL), .RX_BYTE(RX_BYTE),	
+	.finish_boot(finish_boot), .boot_ram_data(boot_ram_data), .boot_ram_addr(boot_ram_addr), .boot_ram_wren(boot_ram_wren), .rst_processor(rst_processor)
     );
  
 
@@ -372,7 +395,7 @@ wire uart_if_ready_debug, o_txd_debug;
 
 `else
 
-	SerialTransmitter #(.pClockFrequency(pClockFrequency), .pBaudRate(4000000))
+	SerialTransmitter #(.pClockFrequency(22222222), .pBaudRate(115200))
 	uart_transmitter(
 		.iClock (wb_clk),
 		.iData  (uart_byte),
@@ -383,6 +406,17 @@ wire uart_if_ready_debug, o_txd_debug;
 		); 
 
 `endif
+
+
+	SerialReceiver uart_receiver 
+	(
+	   .i_Clock(wb_clk),
+	   .i_Rst(wb_rst),
+	   .consumed(consumed),
+	   .i_Rx_Serial(uart_rx),
+	   .o_Rx_DV_reg(RX_FULL),
+	   .o_Rx_Byte(RX_BYTE)
+	);
 
 
 
