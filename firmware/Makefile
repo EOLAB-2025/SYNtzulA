@@ -15,10 +15,10 @@ all: exe.hex
 exe.hex: exe.bin
 	python3 makehex.py $< > $@
 	rm exe.bin
+	python3 formatta_exa_for_ROM.py
 
 exe.bin: exe.elf
 	$(TOOLCHAIN_PREFIX)objcopy -O binary $< $@
-	rm exe.elf
 	rm src/*.o
 
 # Build the executable

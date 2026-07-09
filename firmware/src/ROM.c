@@ -47,45 +47,50 @@ static void send_inference();
 volatile uint32_t sample_addr = 0;
 
 int main(void) {
-	// enable clocks	
-	DEV_WRITE(CLOCK_GATING, 0);     
-
-	// Global interrupt disable
-    clear_csr(mstatus, MSTATUS_MIE_BIT_MASK);
-    write_csr(mie, 0);
 	
-    // Setup the IRQ handler entry point
-    write_csr(mtvec, ((uint_xlen_t) irq_entry));
+	int i, j;
+	uint32_t byte_rx[4];
+	uint32_t word_ram;
+	uint32_t dim_code[2];
+	uint32_t DIM_CODE;
 	
-	// wait for uButton to be pressed on iCEBreaker board
-	DEV_WRITE(SERVANT_GPIO_ADDR,0xaaaaaaaa);
-	while(DEV_READ(SERVANT_GPIO_ADDR) & 0xf0000000);
-	DEV_WRITE(SERVANT_GPIO_ADDR,0x55555555);
+	uart_send(0x01);			 //ready to receive byte 0	
+	while((DEV_READ(UART_RX_FULL) == 0));   //wait valid rx data
+	dim_code[0] = DEV_READ(UART_RX_BYTE);      //byte[0] <- rx valid data MSB
 
-    // Load synaptic weights from flash
-    load_data(WEIGHT_1_ADDR, 1, WEIGHT_DEPTH);
-    load_data(WEIGHT_2_ADDR, 2, WEIGHT_DEPTH);
-    load_data(WEIGHT_3_ADDR, 3, WEIGHT_DEPTH);
-    load_data(WEIGHT_4_ADDR, 4, WEIGHT_DEPTH);
-
-	// load data of first time step
-	load_data(SAMPLE_ADDR,   5,  CHANNELS);
-    sample_addr = SAMPLE_ADDR + CHANNELS;
+	uart_send(0x01);			 //ready to receive byte 0	
+	while((DEV_READ(UART_RX_FULL) == 0));   //wait valid rx data
+	dim_code[1] = DEV_READ(UART_RX_BYTE);      //byte[0] <- rx valid data MSB
 	
-	// tx first inference
-	send_inference();	
+	DIM_CODE = dim_code[0]<<8 |  dim_code[1];
 
-    // Setup timer at every sample time 
-	mtimer_set_raw_time_cmp(TIME);
-    // Enable MIE.MTI
-    set_csr(mie, MIE_MTI_BIT_MASK);
-    // Global interrupt enable 
-    set_csr(mstatus, MSTATUS_MIE_BIT_MASK);
+	for(i=0; i<DIM_CODE; i++){
+	
+		uart_send(0x01);			 //ready to receive byte 0	
+		while((DEV_READ(UART_RX_FULL) == 0));   //wait valid rx data
+		byte_rx[0] = DEV_READ(UART_RX_BYTE);    //byte[0] <- rx valid data MSB
+		
+		uart_send(0x01);
+		while((DEV_READ(UART_RX_FULL) == 0));
+		byte_rx[1] = DEV_READ(UART_RX_BYTE);	//byte[1] <- rx valid data
 
-    while (1);
-    
+		uart_send(0x01);
+		while((DEV_READ(UART_RX_FULL) == 0));
+		byte_rx[2] = DEV_READ(UART_RX_BYTE);	//byte[2] <- rx valid data
+
+		uart_send(0x01);
+		while((DEV_READ(UART_RX_FULL) == 0));
+		byte_rx[3] = DEV_READ(UART_RX_BYTE);	//byte[3] <- rx valid data LSB
+		
+		DEV_WRITE(RAM_BOOT + i*4, byte_rx[0]<<24 |  byte_rx[1]<<16 | byte_rx[2]<<8 |  byte_rx[3]); //write in RAM 32-bit istruction			
+	}
+	
+		DEV_WRITE(FINISH_BOOT, 0x1);	//boot finished -> reset processor 
+
     return 0;
 }
+
+
 
 static void irq_entry(void)  {	
 

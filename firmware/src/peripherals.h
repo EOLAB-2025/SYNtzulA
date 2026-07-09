@@ -39,6 +39,10 @@
 #define GATE_SERV			(0x00000008)
 #define GATE_GENERAL		(0x00000010)
 
+#define UART_RX_FULL (0x41000000)
+#define UART_RX_BYTE (0x41010000)
+#define FINISH_BOOT  (0x42000000)
+#define RAM_BOOT     (0x44000000)
 
 
 
