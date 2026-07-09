@@ -1,2 +1,15 @@
-tb_rtl.vcd
-tb_ps.vcd
+# Waveform dumps
+*.vcd
+
+# Simulation binary
+rtl_sim
+
+# Firmware build artifacts
+firmware/exe.hex
+firmware/exe.elf
+firmware/exe.bin
+sim/tb/exe.hex
+
+# Editor / tool backups
+Makefile_BCK
+debug.gtkw
