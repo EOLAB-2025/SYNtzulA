@@ -7,10 +7,10 @@ export DIE_AREA   =   0   0 2735 2485
 export CORE_AREA  = 285 285 2450 2200
 
 
-export VERILOG_FILES =    SUB/SYNtzulA/rtl/syntzulu_quad_core/* \
-                          SUB/SYNtzulA/rtl/memorie_ihp/* \
-                          SUB/SYNtzulA/rtl/serv/* \
-                          SUB/SYNtzulA/rtl/servant/*                        
+export VERILOG_FILES =    SUB/syntzulu_quad_core/* \
+                          SUB/memorie_ihp/* \
+                          SUB/serv/* \
+                          SUB/servant/*                        
  			
 export SDC_FILE      =   ./designs/$(PLATFORM)/SYNtzulA/quad_core/constraint_quad_core.sdc
 

@@ -7,10 +7,10 @@ export DIE_AREA   =   0   0 2230 2285
 export CORE_AREA  = 285 285 1945 2000
 
 
-export VERILOG_FILES =    SUB/SYNtzulA/rtl/syntzulu_dual_core/* \
-                          SUB/SYNtzulA/rtl/memorie_ihp/* \
-                          SUB/SYNtzulA/rtl/serv/* \
-                          SUB/SYNtzulA/rtl/servant/*                        
+export VERILOG_FILES =    SUB/syntzulu_dual_core/* \
+                          SUB/memorie_ihp/* \
+                          SUB/serv/* \
+                          SUB/servant/*                        
  			
 export SDC_FILE      =   ./designs/$(PLATFORM)/SYNtzulA/dual_core/constraint_dual_core.sdc
 
