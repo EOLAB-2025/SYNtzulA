@@ -135,3 +135,10 @@ If you wish to cite this work, please use the following:
   doi={10.1109/TCAD.2025.3645186}}
 }
 ```
+## Ownership
+
+SYNtzulA was developed at the Department of Electrical and Electronic Engineering (DIEE),
+University of Cagliari (Università degli Studi di Cagliari – UniCA), Italy.
+All rights to this software are owned by the University of Cagliari.
+
+Copyright © 2026 University of Cagliari.
