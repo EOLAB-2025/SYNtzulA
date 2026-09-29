@@ -135,6 +135,7 @@ If you wish to cite this work, please use the following:
   doi={10.1109/TCAD.2025.3645186}}
 }
 ```
+
 ## Ownership
 
 SYNtzulA was developed at the Department of Electrical and Electronic Engineering (DIEE),
