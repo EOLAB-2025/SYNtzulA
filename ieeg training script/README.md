@@ -4,7 +4,7 @@ This folder contains the training pipeline for the spiking neural network (SNN) 
 
 ## Contents
 
-- **`ieeg_training_script.ipynb`** — training notebook, written for Google Colab. It builds and trains a 3-layer feedforward SNN (64-128-64 LIF neurons, leaky-integrator readout) with [snnTorch](https://github.com/jeshraghian/snntorch), and evaluates it with R², correlation coefficient, MAE, [NeuroBench](https://github.com/NeuroBench/neurobench) metrics, and average end-point error on the reconstructed cursor position.
+- **`ieeg_training_script.ipynb`** — training notebook, written for Google Colab. It builds and trains a 3-layer feedforward SNN (64-128-64 LIF neurons, leaky-integrator readout) with [snnTorch](https://github.com/jeshraghian/snntorch). The script supports input channel selection based on I/O correlation-based relevance. The trained model is evaluated with R², correlation coefficient, MAE, [NeuroBench](https://github.com/NeuroBench/neurobench) metrics, and average end-point error on the reconstructed cursor position.
 - **`indy_20170123_02_1ms_thr5_mean_abs_window8192.mat`** — preprocessed dataset used for training (record `indy_20170123_02`, binned at 1 ms).
 
 ## Dataset
