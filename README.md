@@ -136,10 +136,9 @@ If you wish to cite this work, please use the following:
 }
 ```
 
-## Ownership
-
-SYNtzulA was developed at the Department of Electrical and Electronic Engineering (DIEE),
-University of Cagliari (Università degli Studi di Cagliari – UniCA), Italy.
-All rights to this software are owned by the University of Cagliari.
-
-Copyright © 2026 University of Cagliari.
+## Ownership and authors
+This software was developed at the Department of Electrical and Electronic
+Engineering (DIEE), University of Cagliari, Italy. All economic rights belong
+to the University of Cagliari. It is released under the MIT license; the
+licence is non-exclusive and does not transfer ownership.
+Authors: Martis, Luca and Leone, Gianluca and Raffo, Luigi and Meloni, Paolo.
